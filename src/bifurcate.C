@@ -7,25 +7,49 @@
 #include <iostream>
 #include <cstring>
 #include <list>
+#include <cstdio>
+
+#define HELP_STRING \
+"Usage: bifurcate type targets...\n\
+Types:\n\
+  -a  Open the specified file(s) for appending.\n\
+  -w  Open the specified file(s) for writing\n\
+      (WARNING: will overwrite file contents).\n\
+  -p  Pipe to the specified process id(s). Note: only supported\n\
+      on flavors of Unix that support the procfs.\n\
+  -c  Run the specified commands.\n\
+  -h  Print this help message.\n\
+\n\
+targets corresponds to possible inputs.\n\
+"
 
 using namespace std;
 
-enum OutputType {
+enum OutputType
+{
 	NONE = 0,
-	WRITE,	// write to file; >
-	APPEND, // append to file; >>
-	PID,	// pipe to existing PID; |
-	COMMAND // spawn process via command and provide as stdin.
+	WRITE,	 // write to file; >
+	APPEND,  // append to file; >>
+	PID,	 // pipe to existing PID; |
+	COMMAND, // spawn process via command and provide as stdin.
+	HELP
 };
 
 typedef unsigned int uint;
 
 
-OutputType specifiesOutput(char *str)
+void print_help()
+{
+	puts(HELP_STRING);
+}
+
+
+OutputType specifies_output(char *str)
 {
 	uint len = strlen(str);
-	if (!(len == 2 && str[0] == '-')) {
-	    return NONE;
+	if (!(len == 2 && str[0] == '-'))
+	{
+		return NONE;
 	}
 
 	switch (str[1])
@@ -36,19 +60,21 @@ OutputType specifiesOutput(char *str)
 		return WRITE;
 	case 'a':
 		return APPEND;
+	case 'h':
+		return HELP;
 	default:
 		return NONE;
 	}
 }
 
 
-ostream *openFile(char *str, OutputType t)
+ostream *open_file(char *str, OutputType t)
 {
 	return NULL;
 }
 
 
-ostream *parsePid(char *str)
+ostream *parse_pid(char *str)
 {
 	return NULL;
 }
@@ -60,16 +86,16 @@ ostream *spawn(char *str)
 }
 
 
-int addStream(list<ostream*> *streams, char *str, OutputType t)
+int add_stream(list<ostream*> *streams, char *str, OutputType t)
 {
 	switch (t)
 	{
 	case WRITE:
 	case APPEND:
-		streams->push_front(openFile(str, t));
+		streams->push_front(open_file(str, t));
 		break;
 	case PID:
-		streams->push_front(parsePid(str));
+		streams->push_front(parse_pid(str));
 		break;
 	case COMMAND:
 		streams->push_front(spawn(str));
@@ -106,7 +132,12 @@ int main(int c, char **v)
 	OutputType t = PID;
 	while (c--)
 	{
-		(t = specifiesOutput(*v)) || addStream(streams, *v, t);
+		(t = specifies_output(*v)) || add_stream(streams, *v, t);
+		if (t == HELP)
+		{
+			print_help();
+			return 0;
+		}
 		++v;
 	}
 	bifurcate(input, streams);

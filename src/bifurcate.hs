@@ -13,6 +13,16 @@ process "c" cmd   = do
   x <- createProcess (shell cmd) {std_in = CreatePipe}
   let (Just ihandle, _, _, _) = x in
     return ihandle
+printHelp = do
+  putStrLn "Usage: bifurcate type targets...\n\
+           \Types:\n\
+           \  -a  Open the specified file(s) for appending.\n\
+           \  -w  Open the specified file(s) for writing\n\
+           \      (WARNING: will overwrite file contents).\n\
+           \  -c  Run the specified commands.\n\
+           \  -h  Print this help message.\n\
+           \\n\
+           \Note: targets corresponds to possible inputs."
 
 collect :: String -> [String] -> [IO Handle]
 collect t [] = []
@@ -32,8 +42,15 @@ multicast (x : xs) c = do
   hFlush hdl
   multicast xs c
 
+bifurcate :: [String] -> String -> IO ()
+bifurcate args c
+  | (any (\ x -> x == "-h" || x == "--help") args) = do
+    printHelp
+    return ()
+  | otherwise = multicast (parseArgs args) c
+
 main :: IO ()
 main = do
   args <- getArgs
   c <- getContents
-  multicast (parseArgs args) c
+  bifurcate args c

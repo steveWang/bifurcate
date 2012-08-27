@@ -26,7 +26,7 @@ printHelp = do
 
 collect :: String -> [String] -> [IO Handle]
 collect t [] = []
-collect t (('-' : hd) : tl) = parseArgs (hd : tl)
+collect t (('-' : hd) : tl) = parseArgs (('-' : hd) : tl)
 collect t (hd : tl) = ((process t hd) : (collect t tl))
 
 parseArgs :: [String] -> [IO Handle]

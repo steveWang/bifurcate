@@ -2,8 +2,6 @@ import System.Environment
 import System.Process
 import System.IO
 
--- TODO : wait until all files are closed.
-
 process :: String -> String -> IO Handle
 process "a" fname = do 
   x <- openFile fname AppendMode
@@ -28,12 +26,10 @@ parseArgs (('-': hd) : tl) = collect hd tl
 multicast :: [IO Handle] -> String -> IO ()
 multicast [] c = do
   return ()
-multicast [x] c = do
-  hdl <- x
-  hPutStr hdl c
 multicast (x : xs) c = do
   hdl <- x
-  tmp <- hPutStr hdl c
+  hPutStr hdl c
+  hFlush hdl
   multicast xs c
 
 main :: IO ()
